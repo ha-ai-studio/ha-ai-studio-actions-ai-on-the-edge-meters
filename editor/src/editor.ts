@@ -26,8 +26,12 @@ export function render(host:HTMLElement,settings:Settings,context:Context) {
   const recognizedFrames=new Map<string,Preview['result']['regions'][number]>();
   const root=make('section',undefined,'amr-editor');host.append(root);
   const style=make('link');style.rel='stylesheet';style.href=new URL('./editor.css',import.meta.url).href;root.append(style);
-  const intro=make('div',undefined,'amr-intro');intro.append(make('h3','Reference image & reading regions'),make('span','Local recognition · AI-on-the-edge','amr-badge'));root.append(intro);
-  root.append(make('p','Upload a reference, crop the area to use, mark two distinctive alignment features, then frame each digit, decade dial or complete printed number block. Coordinates are stored in image pixels.','amr-help'));
+  function stepHeader(number:number,title:string,description:string){
+    const header=make('header',undefined,'amr-step-header');
+    const badge=make('span',String(number),'amr-step-number');badge.setAttribute('aria-hidden','true');
+    const text=make('div');text.append(make('span',`Step ${number}`,'amr-step-label'),make('h3',title),make('p',description,'amr-help'));
+    header.append(badge,text);return header;
+  }
   const status=make('div',undefined,'amr-status');status.setAttribute('role','status');
   function say(message:string,error=false){if(!alive)return;status.textContent=message;status.classList.toggle('amr-error',error);}
   function button(parent:HTMLElement,text:string,fn:()=>void,primary=false){const b=make('button',text,primary?'amr-primary':undefined);b.type='button';b.addEventListener('click',fn);parent.append(b);return b;}
@@ -46,15 +50,28 @@ export function render(host:HTMLElement,settings:Settings,context:Context) {
   const imageTools=make('div',undefined,'amr-toolstrip');imageTools.setAttribute('role','group');imageTools.setAttribute('aria-label','Reference images');
   function imageButton(label:string,path:string,action:()=>void,parent:HTMLElement=imageTools){const b=button(parent,label,action);b.classList.add('amr-icon-tool');b.setAttribute('aria-label',label);const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('aria-hidden','true');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','1.8');svg.setAttribute('stroke-linecap','round');svg.setAttribute('stroke-linejoin','round');const line=document.createElementNS('http://www.w3.org/2000/svg','path');line.setAttribute('d',path);svg.append(line);const tip=make('span',label,'amr-tool-tooltip');tip.setAttribute('aria-hidden','true');b.replaceChildren(svg,tip);return b;}
   const uploadButton=imageButton('Add reference image','M12 16V3M7 8l5-5 5 5M4 15v6h16v-6',()=>{if(!canChangeImage())return;referenceInput.click();});
+  const captureReferenceButton=imageButton('Capture reference images','M3 7h4l2-3h6l2 3h4v14H3z M16 13a4 4 0 1 1-8 0 4 4 0 0 1 8 0',()=>{void captureReferences();});
   const previousImage=imageButton('Previous reference image','M15 5l-7 7 7 7',()=>{void browseReference(-1);});
   const imageCounter=make('span','0 / 0','amr-image-counter');imageCounter.setAttribute('role','status');imageCounter.setAttribute('aria-label','Reference image position');imageTools.append(imageCounter);
   const nextImage=imageButton('Next reference image','M9 5l7 7-7 7',()=>{void browseReference(1);});
-  function refreshImages(){const images=referenceImages(draft),index=images.findIndex(r=>r.asset_id===draft.reference?.asset_id);imageCounter.textContent=images.length?`${index+1} / ${images.length}`:'0 / 0';previousImage.hidden=nextImage.hidden=images.length<2;imageCounter.hidden=images.length<2;previousImage.disabled=busy||index<=0;nextImage.disabled=busy||index>=images.length-1;uploadButton.disabled=busy||images.length>=16;}
+  const removeImageButton=imageButton('Remove reference image','M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7',()=>{void removeReference();});
+  function refreshImages(){removeImageButton.disabled=busy||!draft.reference;const images=referenceImages(draft),index=images.findIndex(r=>r.asset_id===draft.reference?.asset_id);imageCounter.textContent=images.length?`${index+1} / ${images.length}`:'0 / 0';previousImage.hidden=nextImage.hidden=images.length<2;imageCounter.hidden=images.length<2;previousImage.disabled=busy||index<=0;nextImage.disabled=busy||index>=images.length-1;uploadButton.disabled=busy||images.length>=16;}
   function canChangeImage(){if(busy||drag)return false;if(tool==='crop'&&cropDraft&&JSON.stringify(cropDraft)!==JSON.stringify(area())){say('Apply or cancel the crop before changing images.',true);return false;}return true;}
   async function browseReference(direction:number){if(!canChangeImage())return;const images=referenceImages(draft),index=images.findIndex(r=>r.asset_id===draft.reference?.asset_id),next=images[index+direction];if(!next)return;checkpoint();draft.references=images;draft.reference={...next};selected=null;cropDraft=null;changed();await loadReference(true);}
 
+  async function removeReference(){
+    if(!canChangeImage()||!draft.reference)return;
+    const images=referenceImages(draft),index=images.findIndex(r=>r.asset_id===draft.reference?.asset_id);
+    checkpoint();images.splice(index,1);draft.references=images;
+    const next=images[Math.min(index,images.length-1)];
+    if(next)draft.reference={...next};else delete draft.reference;
+    selected=null;cropDraft=null;straightenLine=null;changed();await loadReference(true);
+    say('Reference image removed. Undo restores it. Save to keep this change.');
+  }
+
   const recognitionTools=make('div',undefined,'amr-toolstrip amr-recognition-tools');recognitionTools.setAttribute('role','group');recognitionTools.setAttribute('aria-label','Recognition');
-  const runButton=button(recognitionTools,'Run recognition',()=>{void runPreview();},true);runButton.title='Read the loaded reference image using the current configuration. No MQTT publication.';runButton.disabled=!draft.reference;
+  const runButton=imageButton('Run recognition','M8 4l12 8-12 8z',()=>{void runPreview();},recognitionTools);runButton.classList.add('amr-primary');runButton.title='Read the loaded reference image using the current configuration. No MQTT publication.';runButton.disabled=!draft.reference;
+  const cameraButton=imageButton('Capture & recognize','M3 7h4l2-3h6l2 3h4v14H3z M10 10l6 4-6 4z',()=>{void runPreview(true);},recognitionTools);cameraButton.title='Use the configured camera, illumination and capture timing. Controls real devices; no MQTT publication.';
   const results=make('div',undefined,'amr-results');results.setAttribute('aria-label','Reference image recognition results');
   const workspace=make('div',undefined,'amr-workspace');const viewport=make('div',undefined,'amr-viewport');const canvas=make('canvas');canvas.tabIndex=0;canvas.setAttribute('aria-label','Reference image region editor. Drag on empty image space to draw a frame. Drag inside to move; drag any corner to resize. Arrow keys move the selected region; Shift plus arrows resizes it.');viewport.append(canvas);const inspector=make('aside',undefined,'amr-inspector');workspace.append(viewport,inspector);
   const primaryTools=make('div',undefined,'amr-toolstrip');primaryTools.setAttribute('role','group');primaryTools.setAttribute('aria-label','Image tools');const rotationTools=make('div',undefined,'amr-toolstrip');rotationTools.setAttribute('role','group');rotationTools.setAttribute('aria-label','Image rotation');const toolbar=make('div',undefined,'amr-toolbar-groups');toolbar.setAttribute('aria-label','Image editor toolbar');toolbar.append(imageTools,primaryTools,rotationTools,recognitionTools);root.append(toolbar);
@@ -78,17 +95,22 @@ export function render(host:HTMLElement,settings:Settings,context:Context) {
     }
   }
   const deleteButton=imageButton('Delete region','M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7',removeSelected,primaryTools);deleteButton.hidden=true;
-  function refreshTools(){deleteButton.hidden=!selectedRegion();deleteButton.disabled=busy;for(const [key,b]of toolButtons)b.setAttribute('aria-pressed',String(key===tool));}
+  function refreshTools(){captureReferenceButton.disabled=busy||!draft.capture?.camera_entity;cameraButton.disabled=busy||!draft.reference||!draft.capture?.camera_entity;deleteButton.hidden=!selectedRegion();deleteButton.disabled=busy;for(const [key,b]of toolButtons)b.setAttribute('aria-pressed',String(key===tool));}
   function undo(){if(busy)return;const previous=history.pop();if(previous){for(const key of Object.keys(draft))delete (draft as Record<string,unknown>)[key];Object.assign(draft,previous);straightenLine=null;selected=null;cropDraft=null;tool='select';changed();void loadReference();refresh();}}
   function rotate(){if(!image)return;checkpoint();straightenLine=null;const size=dims();for(const r of [...regions(),...(draft.crop?[draft.crop]:[])]){const {x,y,width,height}=r;r.x=size.y-y-height;r.y=x;r.width=height;r.height=width;}draft.rotation=((draft.rotation??0)+90)%360;cropDraft=tool==='crop'?{...area()}:null;changed();fit();refresh();}
-  root.append(workspace,status,results);
-  const meterHeader=make('div',undefined,'amr-intro');meterHeader.append(make('h3','Value mapping'));button(meterHeader,'Add value',()=>{checkpoint();(draft.meters??=[]).push({id:uid('meter'),name:`Meter ${meters().length+1}`,unit:draft.unit??'',layout:[]});changed();renderMeters();inspect();});root.append(meterHeader);
+  const captureLog=make('pre',undefined,'amr-capture-log');captureLog.hidden=true;captureLog.setAttribute('aria-label','Camera test log');captureLog.setAttribute('role','log');
+  root.append(workspace,status,captureLog,results);
+  const meterHeader=make('div',undefined,'amr-intro');meterHeader.append(stepHeader(3,'Values & rules','Combine frames into readings and set validation rules.'));button(meterHeader,'Add value',()=>{checkpoint();(draft.meters??=[]).push({id:uid('meter'),name:`Meter ${meters().length+1}`,unit:draft.unit??'',layout:[]});changed();renderMeters();inspect();});root.append(meterHeader);
   const meterCards=make('div',undefined,'amr-value-table-wrap');root.append(meterCards);
+  const capturePanel=make('section',undefined,'amr-capture-panel');capturePanel.append(stepHeader(1,'Camera settings','Choose the camera, illumination and capture timing.'));const captureOptions=make('div',undefined,'amr-settings-panel');capturePanel.append(captureOptions);root.insertBefore(capturePanel,toolbar);
   const optionsPanel=make('section',undefined,'amr-settings-panel');optionsPanel.hidden=true;optionsPanel.append(make('h3','Recognition settings'));const options=make('div',undefined,'amr-settings-grid');optionsPanel.append(options);
   const testPanel=make('section',undefined,'amr-settings-panel');testPanel.hidden=true;testPanel.append(make('h3','Test options'),make('p','Run recognition uses the selected reference image. These previous values are used only for this test and are not saved or sent to MQTT.','amr-help'));
   const previousLabel=make('label','Previous readings (optional JSON, keyed by value ID)');const previousInput=make('textarea');previousInput.rows=4;previousInput.value='{}';previousInput.setAttribute('aria-label','Previous readings JSON');previousLabel.append(previousInput);testPanel.append(previousLabel);
   const valueIds=make('div',undefined,'amr-help');testPanel.append(valueIds);
   root.insertBefore(optionsPanel,workspace);root.insertBefore(testPanel,workspace);
+  capturePanel.classList.add('amr-step');
+  const imageStep=make('section',undefined,'amr-step amr-image-step');imageStep.append(stepHeader(2,'Image & regions','Add a reference image, then draw and assign the reading frames.'),toolbar,optionsPanel,testPanel,workspace,status,captureLog,results);
+  const valuesStep=make('section',undefined,'amr-step');valuesStep.append(meterHeader,meterCards);root.append(imageStep,valuesStep);
   const settingsButton=imageButton('Recognition settings','M9.5 3h5l.5 3 2 1 2.5-1 2 4-2.5 2v2l2 2-2 4-3-1-2 1-.5 2h-4l-.5-2-2-1-3 1-2-4 2-2v-2l-2.5-2 2-4 2.5 1 2-1z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0',()=>togglePanel(optionsPanel),recognitionTools);const testButton=imageButton('Test options','M9 3h6M10 3v7l-6 9a1.3 1.3 0 0 0 1 2h14a1.3 1.3 0 0 0 1-2l-6-9V3M7 15h10',()=>togglePanel(testPanel),recognitionTools);
   settingsButton.setAttribute('aria-expanded','false');testButton.setAttribute('aria-expanded','false');
   function togglePanel(panel:HTMLElement){const open=panel.hidden;optionsPanel.hidden=testPanel.hidden=true;panel.hidden=!open;settingsButton.setAttribute('aria-expanded',String(!optionsPanel.hidden));testButton.setAttribute('aria-expanded',String(!testPanel.hidden));}
@@ -101,7 +123,20 @@ export function render(host:HTMLElement,settings:Settings,context:Context) {
   function optionNumber(key:'search_radius'|'alignment_threshold'|'recognition_threshold'|'digit_threshold'|'analog_threshold',label:string,fallback:number,min:number,max:number,step:string,parent:HTMLElement=options){const field=input(parent,label,draft[key]??fallback,v=>{const n=Number(v);if(!Number.isFinite(n)||n<min||n>max){say('Value is outside the allowed range.',true);field.value=String(draft[key]??fallback);return;}checkpoint();draft[key]=n;changed();},'number');field.min=String(min);field.max=String(max);field.step=step;}
   function settingsGroup(title:string){const group=make('fieldset',undefined,'amr-settings-group');group.append(make('legend',title));options.append(group);return group;}
   function alignmentOptions(){const group=make('div',undefined,'amr-alignment-settings');group.append(make('h3','Alignment settings'),make('p','Shared by both alignment references. These settings apply to every input image.','amr-help'));inspector.append(group);optionNumber('search_radius','Search radius (pixels)',40,0,200,'1',group);optionNumber('alignment_threshold','Minimum alignment score',.7,.1,1,'.05',group);}
-  function renderOptions(){options.replaceChildren();
+  function renderCapture(){captureOptions.replaceChildren();captureOptions.append(make('p','For automatic readings, send an empty data object. The Action captures images through Home Assistant, then restores illumination that was previously off. Lights already on remain unchanged. Run recognition uses uploaded references. Capture & recognize controls the configured devices.','amr-help'));
+    const config=draft.capture??{};
+    for(const [key,label,domains]of [['camera_entity','Camera',['camera']],['light_entity','Illumination (optional)',['light','switch']]] as const){
+      const row=make('div',undefined,'amr-entity-field');const field=input(row,label,config[key]??'',()=>{});field.readOnly=true;field.placeholder=key==='camera_entity'?'Choose a camera':'No illumination control';
+      const choose=button(row,'Search…',async()=>{if(!context.pickEntity){say('Update Studio to use the Home Assistant entity picker.',true);return;}const entity=await context.pickEntity({domains:[...domains],title:label});if(!alive||!entity)return;checkpoint();(draft.capture??={})[key]=entity.entity_id;changed();renderCapture();});choose.setAttribute('aria-label',`Choose ${label}`);choose.classList.add('amr-entity-search');choose.title=`Choose ${label}`;choose.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>';field.addEventListener('click',()=>choose.click());
+      const clear=button(row,'×',()=>{checkpoint();if(draft.capture)delete draft.capture[key];changed();renderCapture();});clear.classList.add('amr-entity-clear');clear.disabled=!config[key];clear.setAttribute('aria-label',`Clear ${label}`);captureOptions.append(row);
+    }
+    const timings=make('div',undefined,'amr-settings-grid');captureOptions.append(timings);
+    for(const [key,label,fallback]of [['settle_seconds','Wait before capture (seconds)',2],['interval_seconds','Time between captures (seconds)',1]] as const){const field=input(timings,label,config[key]??fallback,v=>{const n=Number(v);if(!Number.isFinite(n)||n<0||n>20){say('Enter a delay between 0 and 20 seconds.',true);field.value=String(config[key]??fallback);return;}checkpoint();(draft.capture??={})[key]=n;changed();},'number');field.min='0';field.max='20';field.step='.1';}
+    const label=make('label','Camera images');const count=make('select');for(const [value,text]of [['1','One image'],['2','Two images — values must match']]){const option=make('option',text);option.value=value;count.append(option);}count.value=String(draft.require_confirmation?2:(config.count??1));count.disabled=!!draft.require_confirmation;count.addEventListener('change',()=>{checkpoint();(draft.capture??={}).count=Number(count.value);changed();});label.append(count);timings.append(label);
+    check(captureOptions,'Discard first camera image',!!config.discard_first,v=>{checkpoint();(draft.capture??={}).discard_first=v;changed();});
+    captureOptions.append(make('p','Discard a warm-up image, then wait the time between captures before taking the selected one or two images. Applies to reference capture and recognition.','amr-help'));
+  }
+  function renderOptions(){renderCapture();options.replaceChildren();
     const quality=settingsGroup('Recognition quality');
     optionNumber('digit_threshold','Minimum digit fit',draft.recognition_threshold??.5,0,1,'.05',quality);optionNumber('analog_threshold','Minimum dial fit',draft.recognition_threshold??.5,0,1,'.05',quality);
     quality.append(make('p','Higher thresholds reject more uncertain results. Number blocks use OCR agreement instead of a model fit score.','amr-help'));
@@ -111,8 +146,8 @@ export function render(host:HTMLElement,settings:Settings,context:Context) {
     }
     const stability=settingsGroup('Frame stability');check(stability,'Check five crop positions',!!draft.stability_check,v=>{checkpoint();draft.stability_check=v;changed();});
     stability.append(make('p','Checks digit and dial crops at ±2 pixels. All variants must pass the fit threshold and agree after correction. Leave a two-pixel margin around frames inside the crop.','amr-help'));
-    const confirmation=settingsGroup('Capture confirmation');check(confirmation,'Require two matching captures',!!draft.require_confirmation,v=>{checkpoint();draft.require_confirmation=v;changed();});
-    confirmation.append(make('p','Home Assistant must supply image and confirmation_image from distinct captures. Reference-only tests cannot confirm a value. Exact agreement can reject a moving meter.','amr-help'));
+    const confirmation=settingsGroup('Capture confirmation');check(confirmation,'Require two matching captures',!!draft.require_confirmation,v=>{checkpoint();draft.require_confirmation=v;if(v)(draft.capture??={}).count=2;changed();renderCapture();});
+    confirmation.append(make('p','Automatic capture takes two images. For supplied images, send image and confirmation_image from distinct captures. Reference-only tests cannot confirm a value. Exact agreement can reject a moving meter.','amr-help'));
     valueIds.textContent=meters().map(m=>`${m.name}: ${m.id}`).join(' · ');
   }
   async function loadReference(preserveView=false){
@@ -124,6 +159,26 @@ export function render(host:HTMLElement,settings:Settings,context:Context) {
       if(!alive||generation!==imageGeneration)return false;
       image=candidate;if(tool==='crop')cropDraft={...area()};if(viewport.clientWidth>0&&viewport.clientHeight>0){if(!preserveView)fit();initialFit=true;}refresh();return true;
     } catch(error){if(alive&&generation===imageGeneration)say(error instanceof Error?error.message:'Reference load failed.',true);return false;}
+  }
+  async function captureReferences(){
+    if(!canChangeImage())return;
+    if(!context.cameraTest){say('Update Studio to capture reference images.',true);return;}
+    const count=draft.require_confirmation?2:(draft.capture?.count??1);
+    if(referenceImages(draft).length+count>16){say('Not enough space for the camera captures. Use at most 16 reference images.',true);return;}
+    busy=true;refreshImages();refreshTools();runButton.disabled=true;captureLog.hidden=false;captureLog.textContent='Starting reference capture…';say('Capturing reference images…');
+    const startedRevision=revision;
+    try {
+      const response=await context.cameraTest({},structuredClone(draft),entries=>{if(!alive)return;captureLog.textContent=entries.map(entry=>`${new Date(entry.time).toLocaleTimeString()}  ${entry.message}`).join('\n');captureLog.scrollTop=captureLog.scrollHeight;},true);
+      if(!alive)return;
+      if(startedRevision!==revision)throw new Error('Configuration changed during capture. Capture the reference images again.');
+      if(response.result.status!=='read')throw new Error(response.result.message??'Reference capture failed.');
+      if(response.assets?.length!==count)throw new Error('The camera did not return the expected number of reference images.');
+      const next=structuredClone(draft);const current=draft.reference;
+      for(const asset of response.assets){const reference={asset_id:asset.id,width:asset.width,height:asset.height};next.references=addReference(next,reference);next.reference=reference;}
+      checkpoint();draft.references=next.references;draft.reference=next.reference;selected=null;cropDraft=null;changed();await loadReference(!!current);
+      say(`${count} camera image${count===1?'':'s'} captured. Save to keep the references. Frames, crop and rotation are shared.`);
+    }catch(error){say(error instanceof Error?error.message:'Reference capture failed.',true);}
+    finally{busy=false;if(alive)refresh();}
   }
   async function upload(file:File){if(!canChangeImage())return;busy=true;refreshImages();runButton.disabled=true;say('Uploading private image…');try{
     // Normalize EXIF orientation in the browser so drawn coordinates match decoding.
@@ -281,11 +336,11 @@ export function render(host:HTMLElement,settings:Settings,context:Context) {
       const removeMeter=button(actions,'×',()=>{checkpoint();for(const r of regions())if(r.meter===m.id)delete r.meter;draft.meters=meters().filter(other=>other.id!==m.id);changed();renderMeters();});removeMeter.setAttribute('aria-label',`Remove value ${m.name}`);removeMeter.title='Remove value';
     }
   }
-  async function runPreview(){if(busy)return;if(tool==='crop'&&cropDraft&&JSON.stringify(cropDraft)!==JSON.stringify(area())){say('Apply or cancel the crop before running recognition.',true);return;}const referenceId=draft.reference?.asset_id;if(!referenceId){say('Upload a reference image first.',true);return;}busy=true;refreshImages();refreshTools();results.replaceChildren();rejectedFrames.clear();recognizedFrames.clear();refreshTools();draw();const startedRevision=revision;runButton.disabled=true;say('Aligning image and recognizing regions…');try{const previous=JSON.parse(previousInput.value||'{}');const response=await context.preview({image:{asset_id:referenceId},previous},structuredClone(draft));if(!alive)return;if(startedRevision!==revision){say('Configuration changed during preview. Run recognition again.',true);return;}showResults(response);say(response.result.status==='read'?'Preview complete. No MQTT messages were published.':response.result.message??'Preview completed with unreadable regions.',response.result.status!=='read');}catch(error){say(error instanceof Error?error.message:'Preview failed.',true);}finally{busy=false;if(alive){runButton.disabled=!draft.reference;refreshImages();refreshTools();}}}
-  function showResults(response:Preview){results.replaceChildren();rejectedFrames.clear();recognizedFrames.clear();for(const r of response.result.regions){recognizedFrames.set(r.id,r);if(!r.accepted)rejectedFrames.set(r.id,r.reason??'Recognition rejected.');}inspect();refreshTools();draw();for(const reading of response.result.readings){results.append(make('div',reading.value===null?`${reading.name}: unreadable — ${reading.reason??''}`:`${reading.name}: ${reading.value} ${reading.unit}`,'amr-pill'));}const reports=response.images.filter(i=>/^recognition-report-\d+\.jpg$/.test(i.name)).sort((a,b)=>a.name.localeCompare(b.name));for(const [index,file]of reports.entries()){const link=make('a',reports.length===1?'Download recognition report (JPG)':`Download report page ${index+1} / ${reports.length} (JPG)`,'amr-report-link');link.href=context.previewImageUrl(response.run,file.name);link.download=file.name;results.append(link);}}
+  async function runPreview(camera=false){if(busy)return;if(tool==='crop'&&cropDraft&&JSON.stringify(cropDraft)!==JSON.stringify(area())){say('Apply or cancel the crop before running recognition.',true);return;}const referenceId=draft.reference?.asset_id;if(!referenceId){say('Upload a reference image first.',true);return;}busy=true;if(camera){captureLog.hidden=false;captureLog.textContent='Starting camera test…';}else captureLog.hidden=true;refreshImages();refreshTools();results.replaceChildren();rejectedFrames.clear();recognizedFrames.clear();refreshTools();draw();const startedRevision=revision;runButton.disabled=true;cameraButton.disabled=true;say(camera?'Capturing camera images and recognizing regions…':'Aligning image and recognizing regions…');try{const previous=JSON.parse(previousInput.value||'{}');if(camera&&!context.cameraTest)throw new Error('Update Studio to use camera tests.');const response=await (camera?context.cameraTest!({previous},structuredClone(draft),entries=>{if(!alive)return;captureLog.textContent=entries.map(entry=>`${new Date(entry.time).toLocaleTimeString()}  ${entry.message}`).join('\n');captureLog.scrollTop=captureLog.scrollHeight;}):context.preview({image:{asset_id:referenceId},previous},structuredClone(draft)));if(!alive)return;if(startedRevision!==revision){say('Configuration changed during preview. Run recognition again.',true);return;}showResults(response,camera);say(response.result.status==='read'?(camera?'Camera test complete. Illumination restored; no MQTT messages were published.':'Preview complete. No MQTT messages were published.'):response.result.message??'Preview completed with unreadable regions.',response.result.status!=='read');}catch(error){say(error instanceof Error?error.message:'Preview failed.',true);}finally{busy=false;if(alive){runButton.disabled=!draft.reference;refreshImages();refreshTools();}}}
+  function showResults(response:Preview,camera=false){results.replaceChildren();rejectedFrames.clear();recognizedFrames.clear();for(const r of camera?[]:response.result.regions){recognizedFrames.set(r.id,r);if(!r.accepted)rejectedFrames.set(r.id,r.reason??'Recognition rejected.');}inspect();refreshTools();draw();if(camera&&response.images.some(i=>i.name==='aligned.jpg')){const captured=make('img');captured.src=context.previewImageUrl(response.run,'aligned.jpg');captured.alt='Aligned camera capture used for recognition';captured.style.maxWidth='100%';results.append(make('h3','Camera recognition result'),captured);}for(const reading of response.result.readings){results.append(make('div',reading.value===null?`${reading.name}: unreadable — ${reading.reason??''}`:`${reading.name}: ${reading.value} ${reading.unit}`,'amr-pill'));}const reports=response.images.filter(i=>/^recognition-report-\d+\.jpg$/.test(i.name)).sort((a,b)=>a.name.localeCompare(b.name));for(const [index,file]of reports.entries()){const link=make('a',reports.length===1?'Download recognition report (JPG)':`Download report page ${index+1} / ${reports.length} (JPG)`,'amr-report-link');link.href=context.previewImageUrl(response.run,file.name);link.download=file.name;results.append(link);}}
 
   function refresh(){refreshImages();runButton.disabled=busy||!draft.reference;refreshTools();renderMeters();renderOptions();inspect();draw();refreshTools();}
   let initialFit=false;
   const resize=new ResizeObserver(()=>{if(image&&!initialFit&&viewport.clientWidth>0&&viewport.clientHeight>0){initialFit=true;fit();}else draw();});resize.observe(viewport);refresh();void loadReference();
-  return {read:()=>{if(tool==='crop'&&cropDraft&&JSON.stringify(cropDraft)!==JSON.stringify(area()))throw new Error('Apply or cancel the crop before saving.');if(busy)throw new Error('Wait for the current image operation.');return structuredClone(draft);},dispose:()=>{alive=false;resize.disconnect();image=null;}};
+  return {read:()=>{if(tool==='crop'&&cropDraft&&JSON.stringify(cropDraft)!==JSON.stringify(area()))throw new Error('Apply or cancel the crop before saving.');if(busy)throw new Error('Wait for the current image operation.');if(draft.require_confirmation&&draft.capture)(draft.capture.count=2);return structuredClone(draft);},dispose:()=>{alive=false;resize.disconnect();image=null;}};
 }

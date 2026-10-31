@@ -10,6 +10,7 @@ export interface Meter {
 export interface Crop { x:number; y:number; width:number; height:number; }
 export interface ReferenceImage { asset_id:string; width:number; height:number; }
 export interface Settings {
+  capture?:{camera_entity?:string;light_entity?:string;settle_seconds?:number;count?:number;interval_seconds?:number;discard_first?:boolean};
   crop?:Crop;
   meter_name?:string; unit?:string; display_type?:string;
   reference?:ReferenceImage; references?:ReferenceImage[];
@@ -19,14 +20,17 @@ export interface Settings {
   recognition_threshold?:number; regions?:Region[]; meters?:Meter[];
 }
 export interface Context {
+  pickEntity?(options:{domains:('camera'|'light'|'switch')[];title?:string}):Promise<{entity_id:string;name:string;state:string;available:boolean}|null>;
   changed():void;
   uploadImage(file:File):Promise<{id:string;width:number;height:number}>;
   assetUrl(id:string):string;
   removeImage(id:string):Promise<unknown>;
   preview(data:unknown,settings:Settings):Promise<Preview>;
+  cameraTest?(data:unknown,settings:Settings,progress?:(entries:{time:string;message:string}[])=>void,captureOnly?:boolean):Promise<Preview>;
   previewImageUrl(run:string,name:string):string;
 }
 export interface Preview {
+  assets?:{id:string;width:number;height:number}[];
   run:string; images:{name:string}[];
   result:{status:string;message?:string;readings:{id:string;name:string;value:number|string|null;unit:string;reason?:string}[];
     regions:{id:string;raw:number|string|null;fit:number|null;reason?:string|null;accepted:boolean;image:string}[]};

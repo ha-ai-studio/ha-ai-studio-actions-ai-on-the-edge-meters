@@ -2,7 +2,7 @@
   "id": "analog-meter-reading",
   "name": "Analog Meter Reader",
   "description": "Read mechanical meter digits, decade dials and printed number blocks with reference alignment and local inference.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "python": "3.12",
   "entrypoint": "action.py",
   "editor": "ui/editor.js",
@@ -317,6 +317,42 @@
             "height"
           ]
         }
+      },
+      "capture": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "camera_entity": {
+            "type": "string",
+            "pattern": "^camera\\.[a-z0-9_]{1,200}$"
+          },
+          "light_entity": {
+            "type": "string",
+            "pattern": "^(light|switch)\\.[a-z0-9_]{1,200}$"
+          },
+          "settle_seconds": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "count": {
+            "type": "integer",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "interval_seconds": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 20
+          },
+          "discard_first": {
+            "type": "boolean",
+            "title": "Discard first camera image",
+            "default": false
+          }
+        }
       }
     }
   },
@@ -410,9 +446,11 @@
         ]
       }
     },
-    "required": [
-      "image"
-    ]
+    "dependentRequired": {
+      "confirmation_image": [
+        "image"
+      ]
+    }
   },
   "output_schema": {
     "type": "object",
@@ -454,15 +492,12 @@
     ]
   },
   "example": {
-    "request_id": "analog-meter-example-001",
-    "data": {
-      "image": {
-        "url": "https://example.invalid/meter.jpg"
-      }
-    }
+    "request_id": "meter-read-001",
+    "data": {}
   },
   "capabilities": [
     "assets",
-    "preview"
+    "preview",
+    "home_assistant"
   ]
 }

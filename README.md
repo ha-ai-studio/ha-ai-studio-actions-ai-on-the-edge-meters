@@ -93,3 +93,13 @@ Explicit value layouts determine all output positions. Saved `extended_resolutio
 Editor settings are grouped by task: select an alignment reference to edit the shared search radius and match threshold in its inspector. **Recognition settings** beside Run recognition contains quality, preparation, stability and confirmation. **Test options** contains temporary previous-reading JSON and value IDs. Execution image URLs come directly from `image.url` in the request; reference uploads stay in the toolbar.
 
 Image execution requests do not require a separately configured URL allowlist. Legacy `image_url` settings are ignored. HTTP(S), no embedded credentials, no redirects, bounded downloads and preview network isolation remain enforced.
+
+### Automatic camera acquisition
+
+In **Camera settings**, Use Studio's entity picker for a camera and optional `light.*` or `switch.*` illumination. Configure wait-before-capture (0–20 seconds), one/two images, and inter-image delay (0–20 seconds). Send `{"request_id":"meter-read-001","data":{}}` to request a fresh reading. Supplied `image` requests still bypass acquisition. Both captured images must produce the same value; identical decoded images are rejected as independent confirmation. Selecting **Require two matching captures** forces two images for acquisition.
+
+The Action turns on illumination only when it was off, waits, obtains camera images via HA, restores the original off state, then runs recognition. Already-on lights are not modified. Studio keeps a private restoration journal and retries after failures or restart; restoration cannot happen while HA/Studio is offline. Entity access is limited to the execution's configured IDs. Uploaded reference-image previews never receive the device client and never switch illumination. No vendor-specific camera URL, script or HA token is needed in the Action settings.
+
+**Capture & recognize** in the image toolbar runs the configured camera/illumination acquisition using draft settings, including two-image confirmation. This explicitly controls real devices. The aligned camera image, values and diagnostic report appear below the editor without replacing reference images, publishing MQTT or updating saved readings. **Run recognition** remains reference-only.
+
+Enable **Discard first camera image** for cameras that initially return a stale or dark frame. After the initial illumination delay, the Action fetches and discards one warm-up image, waits the configured inter-image delay, then acquires the selected one or two images. This applies to reference capture and automatic recognition. It is disabled by default and does not guarantee image freshness or brightness. Capture failures still fail the run and restore illumination.

@@ -11,8 +11,6 @@
     &:disabled { opacity:.5; cursor:default; }
   }
   .amr-toolbar-groups { display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin:8px 0 16px; }
-  .amr-recognition-tools .amr-primary { min-height:44px; display:flex; align-items:center; gap:8px; }
-  .amr-recognition-tools .amr-primary::before { content:''; width:0; height:0; border-top:6px solid transparent; border-bottom:6px solid transparent; border-left:9px solid currentColor; }
   .amr-toolstrip {
     display:flex; flex-wrap:wrap; max-width:100%; box-sizing:border-box; width:fit-content; gap:4px; padding:5px; margin:0;
     border:1px solid var(--amr-border); border-radius:10px;
@@ -141,3 +139,32 @@
 }
 
 .amr-editor .amr-icon-tool[aria-expanded="true"] { background:#e4f5fd; color:#007cac; border-color:#8fd6f5; }
+
+.amr-editor .amr-capture-panel { margin:12px 0; padding:12px; border:1px solid var(--amr-border); border-radius:8px; .amr-settings-panel { margin:12px 0 0; border:0; padding:0; } }
+.amr-editor .amr-entity-field { display:flex; align-items:end; gap:8px; margin-bottom:12px; label { flex:1; margin:0; min-width:0; } button { flex:none; } }
+
+.amr-editor .amr-capture-log { background:#08110d; color:#62ff94; padding:12px; border-radius:6px; max-height:240px; overflow:auto; white-space:pre; font:12px/1.6 monospace; margin:12px 0; }
+
+.amr-editor {
+  .amr-step { margin:0 0 24px; padding:20px; border:1px solid var(--amr-border); border-radius:10px; background:var(--card,#fff); min-width:0; }
+  .amr-step-header { display:flex; align-items:flex-start; gap:12px; margin-bottom:20px; min-width:0;
+    h3 { margin:2px 0 4px; font-size:18px; font-weight:600; }
+    .amr-help { margin:0; }
+  }
+  .amr-step-number { display:grid; place-items:center; flex:0 0 36px; height:36px; border-radius:50%; background:#e4f5fd; color:#007cac; font-size:17px; font-weight:600; }
+  .amr-step-label { color:#007cac; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; }
+  .amr-capture-panel.amr-step { margin:0 0 24px; padding:20px; }
+  .amr-intro > .amr-step-header { margin-bottom:16px; }
+  .amr-image-step .amr-toolbar-groups { margin-top:0; }
+  @media(max-width:700px) { .amr-step, .amr-capture-panel.amr-step { padding:12px; } .amr-step-header { gap:10px; } }
+}
+
+.amr-editor .amr-entity-field {
+  position:relative; display:block;
+  label { display:flex; width:100%; }
+  input { padding-left:44px; padding-right:40px; cursor:pointer; }
+  .amr-entity-search, .amr-entity-clear { position:absolute; bottom:4px; width:32px; height:32px; padding:6px; border:0; background:transparent; border-radius:4px; display:grid; place-items:center; }
+  .amr-entity-search { left:6px; color:var(--amr-blue); svg { width:20px; height:20px; } }
+  .amr-entity-clear { right:6px; }
+  .amr-entity-search:hover, .amr-entity-clear:hover { background:#e4f5fd; }
+}

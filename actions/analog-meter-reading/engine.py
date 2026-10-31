@@ -282,13 +282,13 @@ def read_model_region(image, roi, settings, models, report=None):
     return raw,fit,True,None,variants
 
 
-def run(data,settings,context,preview=False):
+def run(data,settings,context,preview=False,captured_images=None):
     deadline=time.monotonic()+20
-    first=source(data,settings,context)
+    first=captured_images[0] if captured_images else source(data,settings,context)
     needs_confirmation=settings.get('require_confirmation',False)
     second=None
-    if 'confirmation_image' in data:
-        second=source({'image':data['confirmation_image']},settings,context)
+    if (captured_images and len(captured_images)==2) or 'confirmation_image' in data:
+        second=captured_images[1] if captured_images and len(captured_images)==2 else source({'image':data['confirmation_image']},settings,context)
         if first.size==second.size and hashlib.sha256(first.tobytes()).digest()==hashlib.sha256(second.tobytes()).digest():
             raise ReadingError('Confirmation needs a different capture; the two decoded images are identical.')
     elif needs_confirmation and not preview:
