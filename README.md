@@ -128,3 +128,18 @@ The archive preserves `actions/analog-meter-reading/`, includes the Python runti
 models, notices, manifest, lockfile and compiled editor, and uses an explicit file
 allowlist. Add new runtime files to `scripts/package_release.py`. Never add private
 images, settings, credentials or development data to that allowlist.
+
+### AI release notes
+
+Maintain a non-empty `## <version>` section in `CHANGELOG.md` for every release,
+matching the Action manifest and tag. Tagged releases generate an English AI
+summary and highlights using the organization's `OPENAI_API_KEY` Actions secret;
+its repository access policy must include this repository. Optionally set the
+`OPENAI_RELEASE_MODEL` Actions variable (default: `gpt-4o-mini`). The key is only
+provided to the release-notes step, never PR builds or the distributed Action.
+
+Only the versioned changelog and bounded commit subjects are sent to the API,
+with response storage disabled. The maintained changelog and installation notes
+are always included. Missing credentials, API failures or invalid AI output fall
+back to the changelog with a generic workflow notice; missing release changelog
+entries fail publication. PR checks test generation with mocked API responses.

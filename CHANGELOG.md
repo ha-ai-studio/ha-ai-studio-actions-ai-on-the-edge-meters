@@ -1,3 +1,7 @@
+## 0.3.2
+
+- Generate English AI release summaries using the organization secret, with the maintained changelog as fallback.
+
 ## 0.3.1
 
 - Build and test the configuration editor in CI for tagged releases.
