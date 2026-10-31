@@ -1,0 +1,9 @@
+{
+  "project": "https://github.com/jomjol/AI-on-the-edge-device",
+  "revision": "708129ba779e233b6fe67ace663bada31888d2ad",
+  "source_directory": "sd-card/config",
+  "sha256": {
+    "ana-cont_1500_s2_q.tflite": "b8bb6025b9eb45fa5c936bcb9bf4266082b78441dcc150257255fbe8ae9abb76",
+    "dig-cont_0900_s3_q.tflite": "8f719c03e69d077809ac8bb20d2f79e73172eac652b18dc8d021952b68262a58"
+  }
+}

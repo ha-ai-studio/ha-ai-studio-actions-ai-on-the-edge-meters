@@ -1,0 +1,16 @@
+{
+  "name": "analog-meter-reader-editor",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build && sass --no-source-map src/editor.scss ../actions/analog-meter-reading/ui/editor.css",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2",
+    "sass": "1.107.1",
+    "vite": "8.3.5"
+  }
+}

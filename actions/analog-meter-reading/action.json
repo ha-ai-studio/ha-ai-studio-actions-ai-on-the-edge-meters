@@ -1,0 +1,468 @@
+{
+  "id": "analog-meter-reading",
+  "name": "Analog Meter Reader",
+  "description": "Read mechanical meter digits, decade dials and printed number blocks with reference alignment and local inference.",
+  "version": "0.2.0",
+  "python": "3.12",
+  "entrypoint": "action.py",
+  "editor": "ui/editor.js",
+  "settings_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "meter_name": {
+        "type": "string",
+        "maxLength": 80
+      },
+      "display_type": {
+        "enum": [
+          "dial",
+          "counter"
+        ]
+      },
+      "unit": {
+        "type": "string",
+        "maxLength": 24
+      },
+      "reference": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "asset_id": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}\\.(png|jpg)$"
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8192
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8192
+          }
+        },
+        "required": [
+          "asset_id",
+          "width",
+          "height"
+        ]
+      },
+      "rotation": {
+        "enum": [
+          0,
+          90,
+          180,
+          270
+        ]
+      },
+      "image_url": {
+        "type": "string",
+        "pattern": "^https?://",
+        "maxLength": 2048
+      },
+      "search_radius": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 200
+      },
+      "alignment_threshold": {
+        "type": "number",
+        "minimum": 0.1,
+        "maximum": 1
+      },
+      "recognition_threshold": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "regions": {
+        "type": "array",
+        "maxItems": 32,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,47}$"
+            },
+            "kind": {
+              "enum": [
+                "unassigned",
+                "alignment",
+                "digit",
+                "analog",
+                "number_block"
+              ]
+            },
+            "name": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "x": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8192
+            },
+            "y": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8192
+            },
+            "width": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 8192
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 8192
+            },
+            "meter": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,47}$"
+            },
+            "order": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 31
+            },
+            "ccw": {
+              "type": "boolean"
+            },
+            "expected_length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32
+            },
+            "expected_value": {
+              "type": "string",
+              "pattern": "^[0-9]{1,32}$"
+            }
+          },
+          "required": [
+            "id",
+            "kind",
+            "name",
+            "x",
+            "y",
+            "width",
+            "height",
+            "order"
+          ]
+        }
+      },
+      "meters": {
+        "type": "array",
+        "maxItems": 8,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]{0,47}$"
+            },
+            "name": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "unit": {
+              "type": "string",
+              "maxLength": 24
+            },
+            "decimal_shift": {
+              "type": "integer",
+              "minimum": -9,
+              "maximum": 9
+            },
+            "extended_resolution": {
+              "type": "boolean"
+            },
+            "transition_start": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 10
+            },
+            "allow_negative": {
+              "type": "boolean"
+            },
+            "max_change": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000000000000000.0
+            },
+            "max_rate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000000000000000.0
+            },
+            "layout": {
+              "type": "array",
+              "maxItems": 16,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              }
+            },
+            "rate_tolerance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000000000000000.0
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "unit"
+          ]
+        }
+      },
+      "crop": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "x",
+          "y",
+          "width",
+          "height"
+        ],
+        "properties": {
+          "x": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8192
+          },
+          "y": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 8192
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 4,
+            "maximum": 8192
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 4,
+            "maximum": 8192
+          }
+        }
+      },
+      "stability_check": {
+        "type": "boolean"
+      },
+      "digit_threshold": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "analog_threshold": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "digit_preprocessing": {
+        "enum": [
+          "none",
+          "autocontrast",
+          "grayscale_autocontrast"
+        ]
+      },
+      "analog_preprocessing": {
+        "enum": [
+          "none",
+          "autocontrast",
+          "grayscale_autocontrast"
+        ]
+      },
+      "require_confirmation": {
+        "type": "boolean"
+      },
+      "straighten_angle": {
+        "type": "number",
+        "minimum": -180,
+        "maximum": 180
+      },
+      "references": {
+        "type": "array",
+        "maxItems": 16,
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "asset_id": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}\\.(png|jpg)$"
+            },
+            "width": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8192
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8192
+            }
+          },
+          "required": [
+            "asset_id",
+            "width",
+            "height"
+          ]
+        }
+      }
+    }
+  },
+  "input_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "image": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "asset_id": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}\\.(png|jpg)$"
+              }
+            },
+            "required": [
+              "asset_id"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "url": {
+                "type": "string",
+                "pattern": "^https?://",
+                "maxLength": 2048
+              }
+            },
+            "required": [
+              "url"
+            ]
+          }
+        ]
+      },
+      "previous": {
+        "type": "object",
+        "maxProperties": 8,
+        "additionalProperties": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1e+18
+            },
+            "elapsed_seconds": {
+              "type": "number",
+              "minimum": 0.001,
+              "maximum": 1000000000.0
+            }
+          },
+          "required": [
+            "value"
+          ]
+        }
+      },
+      "confirmation_image": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "asset_id": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}\\.(png|jpg)$"
+              }
+            },
+            "required": [
+              "asset_id"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "url": {
+                "type": "string",
+                "pattern": "^https?://",
+                "maxLength": 2048
+              }
+            },
+            "required": [
+              "url"
+            ]
+          }
+        ]
+      }
+    },
+    "required": [
+      "image"
+    ]
+  },
+  "output_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "status": {
+        "enum": [
+          "read",
+          "unreadable"
+        ]
+      },
+      "readings": {
+        "type": "array",
+        "maxItems": 8
+      },
+      "regions": {
+        "type": "array",
+        "maxItems": 32
+      },
+      "alignment": {
+        "type": [
+          "object",
+          "null"
+        ]
+      },
+      "message": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "required": [
+      "status",
+      "readings",
+      "regions",
+      "alignment",
+      "message"
+    ]
+  },
+  "example": {
+    "request_id": "analog-meter-example-001",
+    "data": {
+      "image": {
+        "url": "https://example.invalid/meter.jpg"
+      }
+    }
+  },
+  "capabilities": [
+    "assets",
+    "preview"
+  ]
+}
