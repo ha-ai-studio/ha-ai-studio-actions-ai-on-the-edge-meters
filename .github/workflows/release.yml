@@ -1,0 +1,64 @@
+name: Build action release
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.21.0'
+          cache: npm
+          cache-dependency-path: editor/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build and test editor
+        working-directory: editor
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build
+      - name: Test packaging
+        run: python -m unittest discover -s tests -p test_release_package.py -v
+      - name: Package action
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          TAG_BUILD: ${{ startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          if [ "$TAG_BUILD" != true ]; then
+            RELEASE_TAG="v$(python -c "import json; print(json.load(open('actions/analog-meter-reading/action.json'))['version'])")"
+          fi
+          python scripts/package_release.py "$RELEASE_TAG"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: action-release
+          path: dist/ha-ai-studio-actions.zip*
+          if-no-files-found: error
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: action-release
+          path: dist
+      - name: Publish built package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          case "$RELEASE_TAG" in
+            *-*) gh release create "$RELEASE_TAG" dist/ha-ai-studio-actions.zip dist/ha-ai-studio-actions.zip.sha256 --verify-tag --generate-notes --prerelease --latest=false ;;
+            *) gh release create "$RELEASE_TAG" dist/ha-ai-studio-actions.zip dist/ha-ai-studio-actions.zip.sha256 --verify-tag --generate-notes --latest ;;
+          esac

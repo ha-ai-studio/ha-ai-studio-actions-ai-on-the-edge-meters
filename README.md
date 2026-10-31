@@ -103,3 +103,28 @@ The Action turns on illumination only when it was off, waits, obtains camera ima
 **Capture & recognize** in the image toolbar runs the configured camera/illumination acquisition using draft settings, including two-image confirmation. This explicitly controls real devices. The aligned camera image, values and diagnostic report appear below the editor without replacing reference images, publishing MQTT or updating saved readings. **Run recognition** remains reference-only.
 
 Enable **Discard first camera image** for cameras that initially return a stale or dark frame. After the initial illumination delay, the Action fetches and discards one warm-up image, waits the configured inter-image delay, then acquires the selected one or two images. This applies to reference capture and automatic recognition. It is disabled by default and does not guarantee image freshness or brightness. Capture failures still fail the run and restore illumination.
+
+## Release packages
+
+Generated JS and CSS are build outputs and are not tracked in Git. Build locally
+before refreshing a local development source. Production installation uses the
+built GitHub Release asset, rather than the source archive or a Git branch.
+
+In Studio Settings → Action repositories, choose **GitHub Release**, enter this
+repository's public HTTPS URL and use `latest` (latest published stable release)
+or an explicit stable release tag. Refresh updates the creation catalog only;
+existing Actions remain pinned to their installed snapshot, including after restart.
+
+To prepare a release, set `actions/analog-meter-reading/action.json` to the desired
+version, commit the sources and push the matching `v<version>` tag. The release
+workflow installs locked editor dependencies, runs editor tests and the build,
+checks packaging, and publishes `ha-ai-studio-actions.zip` with
+`ha-ai-studio-actions.zip.sha256`. Tags containing a hyphen publish prereleases,
+which Studio does not install. PRs and manual workflow runs validate and upload a
+CI artifact without publishing a release. A release is published only after all
+build checks pass. Existing release assets are never overwritten by this workflow.
+
+The archive preserves `actions/analog-meter-reading/`, includes the Python runtime,
+models, notices, manifest, lockfile and compiled editor, and uses an explicit file
+allowlist. Add new runtime files to `scripts/package_release.py`. Never add private
+images, settings, credentials or development data to that allowlist.
