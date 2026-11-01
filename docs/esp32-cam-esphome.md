@@ -8,8 +8,8 @@ This guide uses the project's supplied camera configuration, with private names 
 
 ## Hardware and placement
 
-- AI Thinker ESP32-CAM with OV2640 and PSRAM. Other ESP32 camera boards need their own pin assignments.
-- A compatible USB programming base, or a USB-to-UART adapter with **3.3 V logic**.
+- AI Thinker ESP32-CAM with OV2640 and PSRAM. A purchase reference is the [ESP32-CAM Development Board including OV2640 at BerryBase](https://www.berrybase.de/esp32-cam-development-board-inkl.-ov2640-kameramodul). The listed package contains the board and camera; plan for a separate USB programming base or UART adapter. It was listed as unavailable when checked on November 1, 2026. Other ESP32 camera boards need their own pin assignments.
+- A compatible USB programming base, or a USB-to-UART adapter with **3.3 V logic**. The example uses the stackable **ESP32-CAM-MB Micro-USB base**. For the board, camera and base together, see the [Waveshare ESP32-CAM + OV2640 + ESP32-CAM-MB kit](https://www.waveshare.com/ESP32-CAM.htm). The camera board goes inside the meter housing; check clearance if the USB base remains attached. Plan for a separate housing, USB cable and power supply.
 - A stable regulated 5 V supply connected to the board's **5V** input and GND. Use short power leads; choose a supply with headroom for Wi-Fi and the illumination LED (a 1 A supply is a practical starting point). Do not feed 5 V into the 3V3 pin or UART pins.
 - A rigid camera mount, usable 2.4 GHz Wi-Fi at the meter, and a way to illuminate the face without glare.
 
@@ -24,9 +24,11 @@ Choose a housing that fits your meter and holds the camera at a fixed, focusable
 | Option | Reference | What to check |
 | --- | --- | --- |
 | Print it yourself | [Water-meter housing on Thingiverse](https://www.thingiverse.com/thing:4573481), linked by the [original AI-on-the-edge project's casing section](https://github.com/jomjol/AI-on-the-edge-device#casing-%EF%B8%8F) | Compare the model dimensions and mounting method with your meter. Follow the designer's printing, assembly and license instructions. |
-| Buy a printed adapter / housing | [eBay listing shared for this setup](https://www.ebay.de/itm/388457251223?var=655983925792) | Confirm the selected diameter and what is included: printed parts only, or also the ESP32-CAM, camera and power accessories. Current availability and contents could not be verified. |
+| Buy a printed housing / adapter | [eBay housing reference](https://www.ebay.de/itm/388457251223?var=655983925792) | Select the matching meter diameter and confirm the chosen variant's contents. Do not assume electronics are included. Current availability and contents could not be independently verified. |
 
-Measure the meter at the housing's attachment point before printing or ordering. Check clearance for the lid, cable exit, camera lens and illumination. A housing for another meter model may need a different adapter even if it looks similar. These links are hardware references, not a claim that both housings are identical or fit every meter.
+Measure the meter at the housing's attachment point before printing or ordering. Check clearance for the lid, cable exit, camera lens and illumination. A housing for another meter model may need a different adapter even if it looks similar. These links are hardware references, not a claim that these housings fit every meter or every board-and-base combination.
+
+**No microSD card is required for this ESPHome + HA AI Studio setup.** You do not need to buy or insert one, even if a seller bundles a card for the original AI-on-the-edge-device firmware.
 
 If buying an assembled reader, confirm the board and camera model and access for USB/serial flashing. A reader supplied with AI-on-the-edge-device firmware needs to be flashed with ESPHome to follow this guide; buying the hardware does not automatically provide the ESPHome camera and light entities used here.
 

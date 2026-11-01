@@ -29,6 +29,19 @@ For an ESP32 camera, follow the [ESP32-CAM with ESPHome guide](docs/esp32-cam-es
 
 Start with one cumulative reading. Add serial-number recognition and leak checks once that reading works reliably.
 
+## ESP32-CAM hardware and housing
+
+The example setup uses a compact **ESP32-CAM with an OV2640 2 MP camera and an ESP32-CAM-MB Micro-USB base**. The camera board mounts inside the meter housing; the separate, stackable MB board provides USB programming and power. Check clearance if you leave the base attached.
+
+| Part | Link | Notes |
+| --- | --- | --- |
+| Camera + USB base kit | [Waveshare ESP32-CAM + OV2640 + ESP32-CAM-MB](https://www.waveshare.com/ESP32-CAM.htm) | Same component combination as the example setup. Housing, USB cable and power supply must be planned separately. |
+| Camera board without USB base | [BerryBase ESP32-CAM with OV2640](https://www.berrybase.de/esp32-cam-development-board-inkl.-ov2640-kameramodul) | Alternative if you already have a programming base or UART adapter. |
+| Housing to print yourself | [Water-meter housing on Thingiverse](https://www.thingiverse.com/thing:4573481) | Referenced by the original AI-on-the-edge project. Check dimensions against your meter. |
+| Housing / adapter to buy | [eBay housing reference](https://www.ebay.de/itm/388457251223?var=655983925792) | Select the correct meter diameter and check the variant's contents; electronics are not assumed to be included. |
+
+**No microSD card is needed.** Check current stock, package contents and housing dimensions before ordering; these are hardware references, not a guarantee of fit. Follow the [ESP32-CAM with ESPHome guide](docs/esp32-cam-esphome.md) to flash the camera and configure illumination and exposure.
+
 ## 1. Install the Actions
 
 1. Open **Settings → Action repositories** in HA AI Studio.
