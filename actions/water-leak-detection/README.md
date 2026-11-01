@@ -2,11 +2,13 @@
 
 Requires HA AI Studio 0.0.19 or newer for sensor history, entity search and numeric draft defaults.
 
-Mount the repository root read-only through `LOCAL_ACTIONS_DIR` and set
-`HA_AI_STUDIO_LOCAL_ACTIONS=/local-actions` on the development server. Add a
-**Local directory** source in Settings with path `.` and refresh it. Create an
-Action of type **Leak detection**. Studio uses an immutable snapshot and its own
-per-instance runner. These sources are not automatically installed or activated.
+Install this repository through **Settings → Action repositories → GitHub Release**,
+refresh the source, and create an Action of type **Leak detection**. See the
+[getting-started guide](../../README.md#1-install-the-actions) for the repository
+URL and installation steps. For local development, see
+[Development and releases](../../docs/development.md). Studio uses an immutable
+snapshot and its own per-instance runner; installing a source does not activate
+an Action.
 
 Configure the cumulative water meter `sensor.*` entity, history period (1–168
 hours), minimum interval consumption in L/h, minimum suspicion duration, and
