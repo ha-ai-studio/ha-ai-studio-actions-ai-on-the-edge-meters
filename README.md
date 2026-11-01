@@ -21,7 +21,7 @@ The reader is adapted from [jomjol/AI-on-the-edge-device](https://github.com/jom
 
 You need:
 
-- A current **HA AI Studio** installation on Linux amd64, connected to Home Assistant.
+- A current **[HA AI Studio](https://github.com/ha-ai-studio/ha-ai-studio)** installation on Linux amd64, connected to Home Assistant.
 - A Home Assistant **`camera.*` entity** showing your meter with stable framing, focus and lighting. Capture reference images directly in the editor, or upload a PNG/JPEG to try recognition without a camera.
 - Optional illumination exposed as a Home Assistant **`light.*` or `switch.*` entity**.
 
