@@ -17,6 +17,19 @@ Frame all digits, dials and two fixed alignment features. Keep the camera close 
 
 The onboard LED is convenient for initial setup. If it creates a white reflection across the numbers, move or diffuse the light, or use a separate Home Assistant-controlled light. Keep the board dry and allow heat to escape.
 
+## Print or buy a housing
+
+Choose a housing that fits your meter and holds the camera at a fixed, focusable distance. Two starting points:
+
+| Option | Reference | What to check |
+| --- | --- | --- |
+| Print it yourself | [Water-meter housing on Thingiverse](https://www.thingiverse.com/thing:4573481), linked by the [original AI-on-the-edge project's casing section](https://github.com/jomjol/AI-on-the-edge-device#casing-%EF%B8%8F) | Compare the model dimensions and mounting method with your meter. Follow the designer's printing, assembly and license instructions. |
+| Buy a printed adapter / housing | [eBay listing shared for this setup](https://www.ebay.de/itm/388457251223?var=655983925792) | Confirm the selected diameter and what is included: printed parts only, or also the ESP32-CAM, camera and power accessories. Current availability and contents could not be verified. |
+
+Measure the meter at the housing's attachment point before printing or ordering. Check clearance for the lid, cable exit, camera lens and illumination. A housing for another meter model may need a different adapter even if it looks similar. These links are hardware references, not a claim that both housings are identical or fit every meter.
+
+If buying an assembled reader, confirm the board and camera model and access for USB/serial flashing. A reader supplied with AI-on-the-edge-device firmware needs to be flashed with ESPHome to follow this guide; buying the hardware does not automatically provide the ESPHome camera and light entities used here.
+
 ## 1. Create the ESPHome device
 
 Install and open ESPHome Device Builder using the [official getting-started guide](https://esphome.io/install/getting-started/). Create a device for this camera and edit its YAML.
