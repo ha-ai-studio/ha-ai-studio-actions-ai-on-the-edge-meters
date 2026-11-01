@@ -25,6 +25,8 @@ You need:
 - A Home Assistant **`camera.*` entity** showing your meter with stable framing, focus and lighting. Capture reference images directly in the editor, or upload a PNG/JPEG to try recognition without a camera.
 - Optional illumination exposed as a Home Assistant **`light.*` or `switch.*` entity**.
 
+For an ESP32 camera, follow the [ESP32-CAM with ESPHome guide](docs/esp32-cam-esphome.md) for wiring, configuration, lighting and exposure.
+
 Start with one cumulative reading. Add serial-number recognition and leak checks once that reading works reliably.
 
 ## 1. Install the Actions
@@ -154,6 +156,7 @@ See [Leak detection requirements and behavior](actions/water-leak-detection/READ
 
 ## Further reading
 
+- [ESP32-CAM with ESPHome](docs/esp32-cam-esphome.md): camera setup, illumination, exposure and Home Assistant integration.
 - [Recognition and runtime reference](docs/recognition-reference.md): request examples, quality checks, image alignment, camera acquisition and runtime limits.
 - [Development and releases](docs/development.md): editor builds, local sources, tests and packaging.
 - [Changelog](CHANGELOG.md): release changes.
