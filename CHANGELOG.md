@@ -1,3 +1,9 @@
+## 0.4.1
+
+- Add Digital Watermeter Device templates with serial number, cumulative reading and derived flow rate, with an optional leak-status sensor and separate Execute function.
+- Include both templates in release ZIPs through an explicit file allowlist.
+- Document Action assignments, reading IDs and Home Assistant history requirements; imported Devices remain inactive and unpublished.
+
 ## 0.4.0
 
 - Add Leak detection as an independent Action using cumulative water sensor history from Home Assistant.

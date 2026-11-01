@@ -2,7 +2,7 @@
   "id": "water-leak-detection",
   "name": "Leak detection",
   "description": "Assess cumulative water meter history for sustained consumption patterns. Deterministic analysis; no external AI service.",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "python": "3.12",
   "entrypoint": "action.py",
   "capabilities": [

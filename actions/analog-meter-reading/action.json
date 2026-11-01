@@ -2,7 +2,7 @@
   "id": "analog-meter-reading",
   "name": "Analog Meter Reader",
   "description": "Read mechanical meter digits, decade dials and printed number blocks with reference alignment and local inference.",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "python": "3.12",
   "entrypoint": "action.py",
   "editor": "ui/editor.js",

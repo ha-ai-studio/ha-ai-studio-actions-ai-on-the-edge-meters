@@ -18,8 +18,13 @@ ACTION_FILES = {
     'water-leak-detection': ('action.json', 'action.py', 'requirements.lock', 'LICENSE.md', 'README.md'),
 }
 
+DEVICE_TEMPLATES = (
+    'device_templates/watermeter-serial-reading-flowrate.json',
+    'device_templates/watermeter-serial-reading-flowrate-leaks.json',
+)
+
 def build(root, tag):
-    files = []
+    files = [root / name for name in DEVICE_TEMPLATES]
     for action, names in ACTION_FILES.items():
         base = root / 'actions' / action
         version = json.loads((base / 'action.json').read_text())['version']

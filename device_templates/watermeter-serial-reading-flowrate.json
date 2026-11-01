@@ -1,0 +1,54 @@
+{
+  "format": "ha-ai-studio-device-template",
+  "version": 1,
+  "config": {
+    "name": "Digital Watermeter",
+    "interval_minutes": 15,
+    "publish": false,
+    "sensors": [
+      {
+        "id": "water-meter-serial-number",
+        "name": "Serial Number",
+        "device_class": "",
+        "cumulative": false,
+        "unit": "",
+        "action_id": "action-1",
+        "reading": "meter-5e9d7126",
+        "max_change": null
+      },
+      {
+        "id": "water-meter-reading",
+        "name": "Reading",
+        "device_class": "water",
+        "cumulative": true,
+        "unit": "m³",
+        "action_id": "action-1",
+        "reading": "meter-c2a19895",
+        "max_change": null
+      },
+      {
+        "id": "water-flow-rate",
+        "name": "Water Flow Rate",
+        "device_class": "volume_flow_rate",
+        "cumulative": false,
+        "unit": "L/min",
+        "action_id": "",
+        "reading": "",
+        "max_change": null,
+        "rate": {
+          "source": "water-meter-reading",
+          "factor": 1000,
+          "time_base": "minute"
+        }
+      }
+    ],
+    "functions": [
+      {
+        "id": "readnow",
+        "name": "Read Now",
+        "action_id": "action-1",
+        "function": "execute"
+      }
+    ]
+  }
+}

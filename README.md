@@ -147,3 +147,41 @@ entries fail publication. PR checks test generation with mocked API responses.
 ## Leak detection
 
 The repository also includes [Leak detection](actions/water-leak-detection/README.md), an independent Action that assesses the Home Assistant history of a cumulative water sensor. It exposes an Execute function and status/reason readings. It requires Studio sensor-history support and uses deterministic local analysis without an external AI service.
+
+## Device template
+
+`device_templates/watermeter-serial-reading-flowrate.json` provides a **Digital
+Watermeter** Device with serial number, cumulative reading in m³, derived flow
+rate in L/min and a Read Now function. The measurement interval is 15 minutes.
+
+In HA AI Studio, refresh this repository, choose **Create Device**, select the
+template below the Device name and assign your meter-reading Action. The template
+references reading IDs `meter-5e9d7126` (serial number) and `meter-c2a19895`
+(cumulative reading). Match these to the meter IDs in your Action, or edit the
+Device reading IDs before activation. The derived flow rate uses the cumulative
+reading and converts m³/min to L/min with factor 1000.
+
+New Devices are inactive and unpublished. The template is included in Git/local
+sources and release ZIPs; it contains no images, credentials or measured values.
+
+### Water meter with leak checks
+
+`device_templates/watermeter-serial-reading-flowrate-leaks.json` adds a
+**Leak Detection** text sensor and a **Check for Leaks** Execute function to the
+water-meter template. It contains four sensors and two functions, with a
+15-minute measurement interval and publication disabled. Assign `action-1` to
+your meter-reading Action and `action-2` to a separate **Leak detection** Action.
+The `leak-status` reading matches that Action's output; its values are `normal`,
+`suspected_leak` and `insufficient_data`.
+
+Configure the Leak detection Action's cumulative Home Assistant sensor entity
+and history settings separately. Use the cumulative water reading, not the flow
+rate or serial-number sensor. A newly created, unpublished Device has no Home
+Assistant history of its own; publish the intended sensor and allow enough
+Recorder history to accumulate, or select an existing cumulative sensor. See
+the [Leak detection requirements](actions/water-leak-detection/README.md).
+
+Read Now updates only meter-reading sensors; Check for Leaks updates only the
+leak sensor. Scheduled measurements include both Actions independently. The
+leak check reads Home Assistant history, not the instantaneous flow-rate value,
+and this template does not configure notifications or follow-up actions.
