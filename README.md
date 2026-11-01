@@ -1,6 +1,6 @@
 # AI-on-the-Edge Meters for HA AI Studio
 
-Turn camera images of a mechanical meter into Home Assistant sensor readings. Configure the reading regions visually, test recognition, and let an HA AI Studio Device measure at a regular interval. Image processing and recognition run locally.
+Turn camera images of a mechanical meter into Home Assistant sensor readings. Configure the reading regions visually, test recognition, and let an [HA AI Studio](https://github.com/ha-ai-studio/ha-ai-studio) Device measure at a regular interval. Image processing and recognition run locally.
 
 This repository includes two Actions and two ready-to-configure Device templates:
 
