@@ -143,3 +143,7 @@ with response storage disabled. The maintained changelog and installation notes
 are always included. Missing credentials, API failures or invalid AI output fall
 back to the changelog with a generic workflow notice; missing release changelog
 entries fail publication. PR checks test generation with mocked API responses.
+
+## Leak detection
+
+The repository also includes [Leak detection](actions/water-leak-detection/README.md), an independent Action that assesses the Home Assistant history of a cumulative water sensor. It exposes an Execute function and status/reason readings. It requires Studio sensor-history support and uses deterministic local analysis without an external AI service.

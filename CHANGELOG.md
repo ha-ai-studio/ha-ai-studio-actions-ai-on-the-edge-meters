@@ -1,3 +1,10 @@
+## 0.4.0
+
+- Add Leak detection as an independent Action using cumulative water sensor history from Home Assistant.
+- Provide configurable consumption thresholds, interval coverage checks, status and reason readings, and an Execute function.
+- Use the shared sensor entity picker and numeric defaults in HA AI Studio 0.0.19 or newer.
+- Include both Actions in the release ZIP with explicit file allowlists. History analysis is deterministic and local; no external AI provider is used.
+
 ## 0.3.2
 
 - Generate English AI release summaries using the organization secret, with the maintained changelog as fallback.

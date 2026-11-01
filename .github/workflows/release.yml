@@ -27,6 +27,8 @@ jobs:
           npm run build
       - name: Test release tooling
         run: python -m unittest discover -s tests -p 'test_release*.py' -v
+      - name: Test leak detection
+        run: python -m unittest discover -s tests -p 'test_leak_detection.py' -v
       - name: Package action
         env:
           RELEASE_TAG: ${{ github.ref_name }}

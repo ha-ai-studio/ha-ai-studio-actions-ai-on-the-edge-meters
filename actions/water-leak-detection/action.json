@@ -1,0 +1,98 @@
+{
+  "id": "water-leak-detection",
+  "name": "Leak detection",
+  "description": "Assess cumulative water meter history for sustained consumption patterns. Deterministic analysis; no external AI service.",
+  "version": "0.4.0",
+  "python": "3.12",
+  "entrypoint": "action.py",
+  "capabilities": [
+    "home_assistant"
+  ],
+  "settings_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "entity_id",
+      "history_hours",
+      "minimum_rate_lph",
+      "minimum_duration_hours",
+      "max_gap_minutes"
+    ],
+    "properties": {
+      "entity_id": {
+        "type": "string",
+        "title": "Water meter entity",
+        "pattern": "^sensor\\.[a-z0-9_]{1,200}$",
+        "description": "Cumulative Home Assistant sensor with recorder history in L or m³.",
+        "x-ha-entity-domains": [
+          "sensor"
+        ]
+      },
+      "history_hours": {
+        "type": "integer",
+        "title": "History period (hours)",
+        "minimum": 1,
+        "maximum": 168,
+        "default": 24
+      },
+      "minimum_rate_lph": {
+        "type": "number",
+        "title": "Minimum interval consumption (L/h)",
+        "exclusiveMinimum": 0,
+        "maximum": 100000,
+        "default": 1
+      },
+      "minimum_duration_hours": {
+        "type": "number",
+        "title": "Minimum suspicion duration (hours)",
+        "minimum": 0.25,
+        "maximum": 168,
+        "default": 6
+      },
+      "max_gap_minutes": {
+        "type": "integer",
+        "title": "Maximum gap between recorded readings (minutes)",
+        "minimum": 1,
+        "maximum": 1440,
+        "default": 60
+      }
+    }
+  },
+  "input_schema": {
+    "type": "object",
+    "additionalProperties": false
+  },
+  "output_schema": {
+    "type": "object",
+    "required": [
+      "status",
+      "reason",
+      "readings"
+    ],
+    "properties": {
+      "status": {
+        "enum": [
+          "normal",
+          "suspected_leak",
+          "insufficient_data"
+        ]
+      },
+      "reason": {
+        "type": "string",
+        "maxLength": 255
+      },
+      "readings": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2
+      }
+    }
+  },
+  "example": {
+    "request_id": "leak-check-001",
+    "data": {}
+  },
+  "functions": [
+    "execute"
+  ]
+}

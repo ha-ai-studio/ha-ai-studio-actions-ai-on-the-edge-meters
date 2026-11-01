@@ -13,12 +13,19 @@ FILES = (
 )
 
 
+ACTION_FILES = {
+    'analog-meter-reading': FILES,
+    'water-leak-detection': ('action.json', 'action.py', 'requirements.lock', 'LICENSE.md', 'README.md'),
+}
+
 def build(root, tag):
-    base = root / 'actions/analog-meter-reading'
-    version = json.loads((base / 'action.json').read_text())['version']
-    if tag != 'v' + version:
-        raise ValueError('Release tag must match action.json version prefixed with v.')
-    files = [base / name for name in FILES]
+    files = []
+    for action, names in ACTION_FILES.items():
+        base = root / 'actions' / action
+        version = json.loads((base / 'action.json').read_text())['version']
+        if tag != 'v' + version:
+            raise ValueError('Release tag must match every action.json version prefixed with v.')
+        files.extend(base / name for name in names)
     for path in files:
         if not path.is_file() or any(p.is_symlink() for p in (path, *path.parents) if p == root or root in p.parents):
             raise ValueError('Required runtime file missing or symlink: ' + path.name)
